@@ -78,7 +78,7 @@ module JavaBuildpack
         @droplet.environment_variables
                 .add_environment_variable('PATH', "$PATH:#{qualify_path(bin_directory, @droplet.root)}")
 
-        'bin/'
+        '$PATH'
       end
 
       def add_lib(dep_directory)
@@ -90,7 +90,7 @@ module JavaBuildpack
                 .add_environment_variable('LD_LIBRARY_PATH',
                                           "$LD_LIBRARY_PATH:#{qualify_path(lib_directory, @droplet.root)}")
 
-        'lib/'
+        '$LD_LIBRARY_PATH'
       end
 
       def config(config_file)
@@ -103,7 +103,7 @@ module JavaBuildpack
 
       def contributions_message(contributions)
         return if contributions.compact.empty?
-        ": #{contributions.compact.join(', ')}"
+        " contributed to: #{contributions.compact.sort.join(', ')}"
       end
 
       def dep_directories
