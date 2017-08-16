@@ -1,3 +1,16 @@
 ---
 name: test-buildpack-2
-config: {}
+config:
+  additional_libraries:
+  - multi-test-additional-library-1
+  - multi-test-additional-library-2
+  environment_variables:
+    multi-test-key-1: multi-test-value-1
+    multi-test-key-2: multi-test-value-2
+  extension_directories:
+  - multi-test-extension-directory-1
+  - multi-test-extension-directory-2
+#  java_opts: {}
+  security_providers:
+  - multi-test-security-provider-1
+  - multi-test-security-provider-2

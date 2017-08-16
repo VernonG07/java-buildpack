@@ -55,6 +55,11 @@ module JavaBuildpack
           contributions = []
           contributions << add_bin(dep_directory)
           contributions << add_lib(dep_directory)
+          contributions << add_additional_libraries(config)
+          contributions << add_environment_variables(config)
+          contributions << add_extension_directories(config)
+          # TODO contributions << add_java_opts(config)
+          contributions << add_security_providers(config)
 
           puts "       #{name}#{contributions_message(contributions)}"
         end
@@ -63,16 +68,33 @@ module JavaBuildpack
       # (see JavaBuildpack::Component::BaseComponent#release)
       def release
         dep_directories.each do |dep_directory|
-          add_bin dep_directory
-          add_lib dep_directory
+          config = config(config_file(dep_directory))
+
+          add_bin(dep_directory)
+          add_lib(dep_directory)
+          add_additional_libraries(config)
+          add_environment_variables(config)
+          add_extension_directories(config)
+          # TODO add_java_opts(config)
+          add_security_providers(config)
         end
       end
 
       private
 
+      def add_additional_libraries(config)
+        additional_libraries = config['config']['additional_libraries']
+        return unless additional_libraries
+
+        additional_libraries.each do |additional_library|
+          @droplet.additional_libraries << Pathname.new(additional_library)
+        end
+
+        'Additional Libraries'
+      end
+
       def add_bin(dep_directory)
         bin_directory = dep_directory + 'bin'
-
         return unless bin_directory.exist?
 
         @droplet.environment_variables
@@ -81,9 +103,37 @@ module JavaBuildpack
         '$PATH'
       end
 
+      def add_environment_variables(config)
+        environment_variables = config['config']['environment_variables']
+        return unless environment_variables
+
+        environment_variables.each do |key, value|
+          path = Pathname.new(value);
+
+          if path.exist?
+            @droplet.environment_variables.add_environment_variable key, path
+          else
+            @droplet.environment_variables.add_environment_variable key, value
+          end
+
+        end
+
+        'Environment Variables'
+      end
+
+      def add_extension_directories(config)
+        extension_directories = config['config']['extension_directories']
+        return unless extension_directories
+
+        extension_directories.each do |extension_directory|
+          @droplet.extension_directories << Pathname.new(extension_directory)
+        end
+
+        'Extension Directories'
+      end
+
       def add_lib(dep_directory)
         lib_directory = dep_directory + 'lib'
-
         return unless lib_directory.exist?
 
         @droplet.environment_variables
@@ -91,6 +141,17 @@ module JavaBuildpack
                                           "$LD_LIBRARY_PATH:#{qualify_path(lib_directory, @droplet.root)}")
 
         '$LD_LIBRARY_PATH'
+      end
+
+      def add_security_providers(config)
+        security_providers = config['config']['security_providers']
+        return unless security_providers
+
+        security_providers.each do |security_provider|
+          @droplet.security_providers << security_provider
+        end
+
+        'Security Providers'
       end
 
       def config(config_file)
@@ -103,7 +164,7 @@ module JavaBuildpack
 
       def contributions_message(contributions)
         return if contributions.compact.empty?
-        " contributed to: #{contributions.compact.sort.join(', ')}"
+        " contributed to: #{contributions.flatten.compact.sort.join(', ')}"
       end
 
       def dep_directories

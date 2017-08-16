@@ -13,14 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'pathname'
 require 'spec_helper'
 require 'component_helper'
 require 'java_buildpack/framework/multi_buildpack'
 
 fdescribe JavaBuildpack::Framework::MultiBuildpack do
   include_context 'component_helper'
-
-  previous_arg_value = ARGV[2]
 
   before do
     allow(Pathname).to receive(:glob).with('/tmp/*/deps').and_return([Pathname.new(app_dir)])
@@ -66,6 +65,80 @@ fdescribe JavaBuildpack::Framework::MultiBuildpack do
     component.release
 
     expect(environment_variables).to include('LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/0/lib')
+  end
+
+  it 'adds additional_libraries during compile',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.compile
+
+    expect(additional_libraries).to include(Pathname.new('multi-test-additional-library-1'))
+    expect(additional_libraries).to include(Pathname.new('multi-test-additional-library-2'))
+  end
+
+  it 'adds additional_libraries during release',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.release
+
+    expect(additional_libraries).to include(Pathname.new('multi-test-additional-library-1'))
+    expect(additional_libraries).to include(Pathname.new('multi-test-additional-library-2'))
+  end
+
+  it 'adds environment_variables during compile',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.compile
+
+    expect(environment_variables).to include('multi-test-key-1=multi-test-value-1')
+    expect(environment_variables).to include('multi-test-key-2=multi-test-value-2')
+  end
+
+  it 'adds environment_variables during release',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.release
+
+    expect(environment_variables).to include('multi-test-key-1=multi-test-value-1')
+    expect(environment_variables).to include('multi-test-key-2=multi-test-value-2')
+  end
+
+  it 'adds extension_directories during compile',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.compile
+
+    expect(extension_directories).to include(Pathname.new('multi-test-extension-directory-1'))
+    expect(extension_directories).to include(Pathname.new('multi-test-extension-directory-2'))
+  end
+
+  it 'adds extension_directories during release',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.release
+
+    expect(extension_directories).to include(Pathname.new('multi-test-extension-directory-1'))
+    expect(extension_directories).to include(Pathname.new('multi-test-extension-directory-2'))
+  end
+
+  # TODO: Java Opts
+
+  it 'adds security_providers during compile',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.compile
+
+    expect(security_providers).to include('multi-test-security-provider-1')
+    expect(security_providers).to include('multi-test-security-provider-2')
+  end
+
+  it 'adds security_providers during release',
+     app_fixture: 'framework_multi_buildpack_deps' do
+
+    component.release
+
+    expect(security_providers).to include('multi-test-security-provider-1')
+    expect(security_providers).to include('multi-test-security-provider-2')
   end
 
 end
